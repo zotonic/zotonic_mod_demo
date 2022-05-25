@@ -1,0 +1,12 @@
+%% -*- mode: erlang -*-
+{application, zotonic_mod_demo, [
+    {description, "Module for the Zotonic demo site."},
+    {vsn, "git"},
+    {registered, []},
+    {applications, [kernel, stdlib, zotonic_core]},
+    {env, []},
+    {modules, []},
+    {maintainers, []},
+    {licenses, ["Apache-2.0"]},
+    {links, [{"GitHub", "https://github.com/zotonic/zotonic"}]}
+]}.
