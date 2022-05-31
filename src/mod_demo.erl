@@ -22,7 +22,7 @@
 -mod_title("Demo").
 -mod_description("Used for the Zotonic demo site.").
 -mod_prio(500).
--mod_schema(2).
+-mod_schema(3).
 -mod_depends([mod_content_groups, mod_acl_user_groups]).
 
 -export([
@@ -95,6 +95,15 @@ manage_schema(_, _Context) ->
                 <<"summary">> => <<"The user group for the demo account.">>,
                 <<"language">> => [ en ],
                 <<"content_group_id">> => system_content_group
+            }},
+            {page_logon, other, #{
+                <<"is_published">> => true,
+                <<"is_protected">> => true,
+                <<"title">> => <<"Logon">>,
+                <<"body">> => <<"<p>Use username <b>demo</b> with password <b>demo</b>.</p>">>,
+                <<"language">> => [ en ],
+                <<"content_group_id">> => system_content_group,
+                <<"page_path">> => <<"/logon">>
             }}
         ],
         edges = [
