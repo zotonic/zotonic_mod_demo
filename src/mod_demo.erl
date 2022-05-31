@@ -22,8 +22,8 @@
 -mod_title("Demo").
 -mod_description("Used for the Zotonic demo site.").
 -mod_prio(500).
--mod_schema(1).
--mod_depends([mod_content_groups]).
+-mod_schema(2).
+-mod_depends([mod_content_groups, mod_acl_user_groups]).
 
 -export([
     observe_tick_1h/2,
@@ -87,7 +87,18 @@ manage_schema(_, _Context) ->
                 <<"summary">> => <<"All demonstration content is created in this content group.">>,
                 <<"language">> => [ en ],
                 <<"content_group_id">> => system_content_group
+            }},
+            {acl_user_group_demo, acl_user_group, #{
+                <<"is_published">> => true,
+                <<"is_protected">> => true,
+                <<"title">> => <<"Demo user group">>,
+                <<"summary">> => <<"The user group for the demo account.">>,
+                <<"language">> => [ en ],
+                <<"content_group_id">> => system_content_group
             }}
+        ],
+        edges = [
+            {demo_user, hasusergroup, acl_user_group_demo}
         ]
     }.
 
