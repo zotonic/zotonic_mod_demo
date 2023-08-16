@@ -21,12 +21,13 @@
 
 -mod_title("Demo").
 -mod_description("Used for the Zotonic demo site.").
--mod_prio(500).
+-mod_prio(100).
 -mod_schema(3).
 -mod_depends([mod_content_groups, mod_acl_user_groups]).
 
 -export([
     observe_tick_1h/2,
+    observe_acl_is_allowed/2,
     periodic_cleanup/1,
     manage_schema/2,
     manage_data/2
@@ -37,6 +38,23 @@
 -spec observe_tick_1h(tick_1h, z:context()) -> ok.
 observe_tick_1h(tick_1h, Context) ->
     periodic_cleanup(Context).
+
+
+%% @doc Prevent that the demo user can edit itself
+-spec observe_acl_is_allowed(#acl_is_allowed{}, z:context()) -> boolean() | undefined.
+observe_acl_is_allowed(#acl_is_allowed{ action = Action, object = Id }, Context)
+    when is_integer(Id), Action =/= view ->
+    case z_acl:user(Context) =:= Id of
+        true ->
+            case m_rsc:p_no_acl(Id, name, Context) of
+                <<"demo_user">> -> false;
+                _ -> undefined
+            end;
+        _ ->
+            undefined
+    end;
+observe_acl_is_allowed(_, _Context) ->
+    undefined.
 
 %% @doc Every hour delete all demo content that is created more than a day ago
 %% and is not edited in the last hour.
@@ -56,9 +74,9 @@ periodic_cleanup(Context) ->
     ContextSudo = z_acl:sudo(Context),
     lists:foreach(
         fun({Id}) ->
-            case m_rsc:p(Id, <<"is_protected">>, Context) of
+            case m_rsc:p(Id, <<"is_protected">>, ContextSudo) of
                 true ->
-                    m_rsc:update(Id, #{ <<"is_protected">> => false }, Context);
+                    m_rsc:update(Id, #{ <<"is_protected">> => false }, ContextSudo);
                 false ->
                     ok
             end,
