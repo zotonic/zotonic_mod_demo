@@ -1,8 +1,9 @@
 %% @author Marc Worrell <marc@worrell.nl>
-%% @copyright 2022 Marc Worrell
+%% @copyright 2022-2023 Marc Worrell
 %% @doc Demo site, automatically reset content after a set period.
+%% @enddoc
 
-%% Copyright 2022 Marc Worrell
+%% Copyright 2022-2023 Marc Worrell
 %%
 %% Licensed under the Apache License, Version 2.0 (the "License");
 %% you may not use this file except in compliance with the License.
@@ -28,6 +29,7 @@
 -export([
     observe_tick_1h/2,
     observe_acl_is_allowed/2,
+    observe_rsc_update/3,
     periodic_cleanup/1,
     manage_schema/2,
     manage_data/2
@@ -55,6 +57,28 @@ observe_acl_is_allowed(#acl_is_allowed{ action = Action, object = Id }, Context)
     end;
 observe_acl_is_allowed(_, _Context) ->
     undefined.
+
+
+%% @doc On rsc update - force the seo_noindex flag for resources in the
+%% demo content group. This to prevent spammers from abusing the demo site.
+observe_rsc_update(#rsc_update{ props = Raw }, {ok, Update}, Context) ->
+    CGId = cg_id(Update, Raw),
+    case m_rsc:p_no_acl(CGId, name, Context) of
+        <<"demo_content_group">> ->
+            Update1 = Update#{
+                <<"seo_noindex">> => true
+            },
+            {ok, Update1};
+        _ ->
+            {ok, Update}
+    end;
+observe_rsc_update(#rsc_update{}, {error, _} = Error, _Context) ->
+    Error.
+
+cg_id(#{ <<"content_group_id">> := CGId }, _) -> CGId;
+cg_id(_, #{ <<"content_group_id">> := CGId }) -> CGId;
+cg_id(_, _) -> undefined.
+
 
 %% @doc Every hour delete all demo content that is created more than a day ago
 %% and is not edited in the last hour.
